@@ -9,29 +9,42 @@ const app = express();
 app.use(express.json());
 
 
-mongoose.connect('mongodb://localhost/mentor-student-db', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb://localhost/mentor-student-db', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  connectTimeoutMS: 30000,
+  socketTimeoutMS: 30000,
+})
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Failed to connect to MongoDB:', err));
 
 
-app.post('/mentors', async (req, res) => {
-  try {
-    const mentor = await Mentor.create(req.body);
-    res.status(201).json(mentor);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create mentor' });
-  }
-});
+  app.post('/mentors', async (req, res) => {
+    try {
+      const { name } = req.body;
+      const mentor = new Mentor({ name });
+      await mentor.save();
+  
+      res.status(201).json(mentor);
+    } catch (error) {
+      console.error('Error creating mentor:', error);
+      res.status(500).json({ error: 'Failed to create mentor' });
+    }
+  });
 
 
-app.post('/students', async (req, res) => {
-  try {
-    const student = await Student.create(req.body);
-    res.status(201).json(student);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create student' });
-  }
-});
+  app.post('/students', async (req, res) => {
+    try {
+      const { name } = req.body;
+      const student = new Student({ name });
+      await student.save();
+  
+      res.status(201).json(student);
+    } catch (error) {
+      console.error('Error creating student:', error);
+      res.status(500).json({ error: 'Failed to create student' });
+    }
+  });
 
 // Assign Student to Mentor
 app.post('/mentors/:mentorId/students', async (req, res) => {
